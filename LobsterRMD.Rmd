@@ -9,3 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(readr)
+
+size <- read_csv("lobster_size_abundance.csv")
+View(size)
+
+traps <- read_csv("lobster_traps.csv")
+
+View(traps)
+```
+

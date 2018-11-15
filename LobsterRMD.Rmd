@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, message=FALSE}
 library(readr)
 
 size <- read_csv("lobster_size_abundance.csv")
@@ -18,5 +18,19 @@ View(size)
 traps <- read_csv("lobster_traps.csv")
 
 View(traps)
+```
+
+```{r, message=FALSE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(pwr)
+library(effsize)
+library(ggplot2)
+```
+
+Preliminary Data Exploration: Lobster counts at all five locations from 2012 to 2017.  
+```{r}
+
 ```
 

@@ -22,7 +22,7 @@ library(ggplot2)
 library(tidyr) # This package is to convert to tidy format with spread() function.
 library(vcdExtra) # Perhaps this one will do it.
 library(dplyr) # For summary stats?
-
+library(sjstats)
 ```
 
 ```{r, message=FALSE, include = FALSE}
@@ -70,6 +70,7 @@ size_tidier <- size_tidy %>%
 
 # Lobster carapace length and counts are now in tidy format. Use 'size_tidier'.
 
+size_tidier
 ```
 
 ```{r, include = FALSE}
@@ -96,7 +97,7 @@ trap_graph
 
 ```
 
-```{r, include = FALSE}
+```{r}
 ### 1. Lobster abundance and fishing pressure (2012-2017)
 
 # 1b. Summarize lobster data in a table grouped by Year and Site, filtered by 5 sites.
@@ -158,7 +159,7 @@ size_2017_qq
 ```
 
 ```{r}
-### 2. Compare mean lobster size across five sites in 2017
+### 2. Compare mean lobster size across five sites in 2017.
 
 ####################################
 # Hypothesis Test
@@ -229,7 +230,38 @@ boxplot_anova_size_2017
 
 # Question 1: What proportion of observed lobsters at each site are above the legal minumum?
 
+ivprop <-size_tidier %>%
+  filter(SITE == "IVEE", 
+         YEAR == "2017")
+prop(ivprop, SIZE > 82.6)
+
+naprop <-size_tidier %>%
+  filter(SITE == "NAPL", 
+         YEAR == "2017")
+prop(naprop, SIZE > 82.6)
+
+aqprop <-size_tidier %>%
+  filter(SITE == "AQUE", 
+         YEAR == "2017")
+mean(aqprop$SIZE > 82.6)
+
+caprop <-size_tidier %>%
+  filter(SITE == "CARP", 
+         YEAR == "2017")
+mean(caprop$SIZE > 82.6)
+
+moprop <-size_tidier %>%
+  filter(SITE == "MOHK", 
+         YEAR == "2017")
+mean(moprop$SIZE > 82.6)
+
 # Question 2: Does that proportion differ significantly across 5 sites?
+
+# H0: There is no notable difference between the proportion of lobsters above the legal size limit between the five sites. 
+# HA: There is a notable difference between the proportion of lobsters above the legal size limit between the five sites.
+
+chisq.test()
+
 
 ```
 

@@ -230,37 +230,32 @@ boxplot_anova_size_2017
 
 # Question 1: What proportion of observed lobsters at each site are above the legal minumum?
 
-ivprop <-size_tidier %>%
-  filter(SITE == "IVEE", 
-         YEAR == "2017")
+ivprop <-size_2017 %>%
+  filter(SITE == "IVEE")
 prop(ivprop, SIZE > 82.6)
 
-naprop <-size_tidier %>%
-  filter(SITE == "NAPL", 
-         YEAR == "2017")
+naprop <-size_2017 %>%
+  filter(SITE == "NAPL")
 prop(naprop, SIZE > 82.6)
 
-aqprop <-size_tidier %>%
-  filter(SITE == "AQUE", 
-         YEAR == "2017")
-mean(aqprop$SIZE > 82.6)
+aqprop <-size_2017 %>%
+  filter(SITE == "AQUE")
+prop(aqprop, SIZE > 82.6)
 
-caprop <-size_tidier %>%
-  filter(SITE == "CARP", 
-         YEAR == "2017")
-mean(caprop$SIZE > 82.6)
+caprop <-size_2017 %>%
+  filter(SITE == "CARP")
+prop(caprop, SIZE > 82.6)
 
-moprop <-size_tidier %>%
-  filter(SITE == "MOHK", 
-         YEAR == "2017")
-mean(moprop$SIZE > 82.6)
+moprop <-size_2017 %>%
+  filter(SITE == "MOHK")
+prop(moprop, SIZE > 82.6)
 
 # Question 2: Does that proportion differ significantly across 5 sites?
 
 # H0: There is no notable difference between the proportion of lobsters above the legal size limit between the five sites. 
 # HA: There is a notable difference between the proportion of lobsters above the legal size limit between the five sites.
 
-chisq.test()
+chisq.test(c(.2145, .3304, .2388, .2539, .1348))
 
 
 ```

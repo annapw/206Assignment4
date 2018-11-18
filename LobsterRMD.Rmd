@@ -130,8 +130,11 @@ trap_graph_2
 
 lobster_graph_2 <- ggplot(lobster_summary, aes(x = YEAR, y = count)) +
                       geom_bar(position = position_dodge(), 
-                               stat = "identity", aes(fill = SITE)) + 
-                               scale_fill_brewer(~SITE, palette = "terrain_hcl(5, c=c(65,0), l=c(45,95), power=c(1/3,1.5))") +
+                               stat = "identity", aes(fill = SITE)) +
+  scale_fill_manual(
+values = c("skyblue", "royalblue","steelblue", "blue", "navy"),
+limits = c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"), breaks =c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"),
+name = "Site", labels = c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"))
   theme_classic()
 lobster_graph_2
 

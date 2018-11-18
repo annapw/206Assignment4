@@ -134,7 +134,7 @@ lobster_graph_2 <- ggplot(lobster_summary, aes(x = YEAR, y = count)) +
   scale_fill_manual(
 values = c("skyblue", "royalblue","steelblue", "blue", "navy"),
 limits = c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"), breaks =c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"),
-name = "Site", labels = c("AQUE", "CARP", "IVEE", "MOHK", "NAPL"))
+name = "Site", labels = c("AQUE", "NAPL", "MOHK", "IVEE", "MOHK"))
   theme_classic()
 lobster_graph_2
 

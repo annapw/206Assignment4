@@ -22,7 +22,9 @@ library(ggplot2)
 library(tidyr) # This package is to convert to tidy format with spread() function.
 library(vcdExtra) # Perhaps this one will do it.
 library(dplyr) # For summary stats?
-library(sjstats)
+library(sjstats) # For chi-square
+library(ggsignif) # To add significance brackets
+library(xtable) # For ANOVA table
 ```
 
 ```{r, message=FALSE, include = FALSE}
@@ -158,7 +160,19 @@ size_2017_qq
 
 ```
 
-```{r}
+```{r, echo = FALSE}
+### 2. Compare mean lobster size across five sites in 2017
+# Summary Statistics Table
+
+summary_table <- kable(summary_stats_size_2017, col.names = c("Site","Median","Maximum","Mean","SD","n")) %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+  
+summary_table
+
+```
+
+
+```{r, echo = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017.
 
 ####################################
@@ -190,11 +204,11 @@ post_hoc_size_2017
 
 ```
 
-Lobster carapace length significantly differs in at least two sites in 2017 (F(4) = 3.424, $p$ = 0.0085, $\alpha$ = 0.05).
+Lobster carapace length significantly differs in at least two sites in 2017 (F(4,1663) = 3.42, $p$ = 0.0085, $\alpha$ = 0.05).
 
 **What is in-line referencing for AVONA?**
 
-```{r}
+```{r, include = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017
 
 ###################################
@@ -209,6 +223,35 @@ boxplot_anova_size_2017
 
 ```
 
+```{r ANOVA_table, echo = FALSE, results = 'asis', message = FALSE}
+
+table <- xtable(size_2017_anova, caption = 'Lobster carapace size by site ANOVA results summary.')
+print(table, comment = FALSE, caption.placement = "top")
+
+# Attempted an ANOVA summary table. It didn't work.
+
+```
+
+```{r, echo = FALSE, results = "asis"}
+### 2. Compare mean lobster size across five sites in 2017
+
+###################################
+# Make column graph of mean carapace size w/ SD error bars
+
+size_2017_graph <- ggplot(summary_stats_size_2017, aes(x = SITE, y = mean)) +
+  geom_col(width = 0.5) +
+  geom_errorbar(aes(ymax = mean + sd, ymin = mean - sd), width = 0.1) +
+  theme_classic() +
+  scale_y_continuous(expand = c(0,0), limits = c(0,100)) + # Sets y-axis on x-axis line and adjusts scale.
+  xlab("\nSite") +
+  ylab("Mean Lobster Carapace Length (mm)\n") +
+  annotate("text", x = 5, y = 90, label = "*") # Annotates graph.
+
+size_2017_graph
+
+```
+
+**Figure 1. Lobster carapace length for five sites in 2017.** Mean lobster carapace length (mm) for sites AQUE (n = 67), CARP (n = 705), IVEE (n = 606), MOHK (n = 178), and NAPL (n = 112) in Santa Barbara County in 2017. Error bars indicate +/- 1 standard deviation. *Asterisk or letters indicate values that do/do not differ significantly* (by one-way ANOVA with Tukey's HSD; F(4,1663) = 3.42, $p$ = 0.0085) with $\alpha$ = 0.05 for all post-hoc pairwise comparison.
 
 ```{r}
 ### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017

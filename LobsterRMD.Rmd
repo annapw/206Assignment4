@@ -25,6 +25,7 @@ library(dplyr) # For summary stats?
 library(sjstats) # For chi-square
 library(ggsignif) # To add significance brackets
 library(xtable) # For ANOVA table
+library(RColorBrewer)
 ```
 
 ```{r, message=FALSE, include = FALSE}
@@ -46,7 +47,6 @@ traps <- read_csv("lobster_traps.csv")
 
 ```
 
- 
 ```{r, message = FALSE, include = FALSE}
 # Preliminary Data Exploration: Lobster counts at all five locations from 2012 to 2017. 
 
@@ -75,7 +75,8 @@ size_tidier <- size_tidy %>%
 size_tidier
 ```
 
-```{r, include = FALSE}
+### 1. Lobster abundance and fishing pressure (2012-2017)
+```{r, echo = FALSE}
 # Data Exploration: Lobster counts at all five locations from 2012 to 2017. 
 
 ### 1. Lobster abundance and fishing pressure (2012-2017)
@@ -99,7 +100,7 @@ trap_graph
 
 ```
 
-```{r}
+```{r, echo = FALSE}
 ### 1. Lobster abundance and fishing pressure (2012-2017)
 
 # 1b. Summarize lobster data in a table grouped by Year and Site, filtered by 5 sites.
@@ -117,6 +118,30 @@ lobster_graph <- ggplot(lobster_summary, aes(x = YEAR, y = count)) +
 lobster_graph
 ```
 
+```{r}
+### 1. Lobster abundance and fishing pressure (2012-2017)
+# Second attempt at useful graph
+
+trap_graph_2 <- ggplot(traps_summary, aes(x = YEAR, y = count)) +
+                       geom_bar(position = position_dodge(), stat = "identity", aes(fill = SITE)) +
+  theme_classic()
+trap_graph_2
+
+
+lobster_graph_2 <- ggplot(lobster_summary, aes(x = YEAR, y = count)) +
+                      geom_bar(position = position_dodge(), 
+                               stat = "identity", aes(fill = SITE)) + 
+                               scale_fill_brewer(~SITE, palette = "terrain_hcl(5, c=c(65,0), l=c(45,95), power=c(1/3,1.5))") +
+  theme_classic()
+lobster_graph_2
+
+
+```
+
+
+
+
+### 2. Compare mean lobster size across five sites in 2017
 ```{r, include = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017
 # Summary Statistics
@@ -133,8 +158,8 @@ summary_stats_size_2017 <- size_tidier %>%
   group_by(SITE) %>%
   summarize(median = round(median(SIZE),2), 
             max = max(SIZE),
-            mean = round(mean(SIZE),2),
-            sd = round(sd(SIZE),2),
+            mean = round(mean(SIZE),1),
+            sd = round(sd(SIZE),1),
             n = length(SIZE))
 summary_stats_size_2017
 
@@ -160,12 +185,17 @@ size_2017_qq
 
 ```
 
+**Table 1. Summarized lobster carapace length at five sites in 2017.** Median, maximum, and mean lobster carapace length (mm) for sites AQUE, CARP, IVEE, MOHK, and NAPL in Santa Barbara County in 2017 (n = 1,668). Data were collected every two to four weeks from October to March by the Santa Barbara Coastal Long Term Ecological Research Project (SBC LTER).
 ```{r, echo = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017
 # Summary Statistics Table
 
-summary_table <- kable(summary_stats_size_2017, col.names = c("Site","Median","Maximum","Mean","SD","n")) %>%
-  kable_styling(bootstrap_options = "striped", full_width = FALSE)
+summary_table <- kable(summary_stats_size_2017,
+                       col.names = c("Site","Median","Max","Mean","SD","n"), 
+                       align = "c") %>%
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE) %>%
+  add_header_above(c(" ","Lobster Carapace Length (mm)" = 5))
   
 summary_table
 
@@ -202,11 +232,11 @@ post_hoc_size_2017
 
 # NAPL-MOHK  4.2321429 -0.08607271 8.550358 0.0579286 is not significant.
 
+# What is in-line referencing for AVONA?
+
 ```
 
 Lobster carapace length significantly differs in at least two sites in 2017 (F(4,1663) = 3.42, $p$ = 0.0085, $\alpha$ = 0.05).
-
-**What is in-line referencing for AVONA?**
 
 ```{r, include = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017
@@ -253,6 +283,8 @@ size_2017_graph
 
 **Figure 1. Lobster carapace length for five sites in 2017.** Mean lobster carapace length (mm) for sites AQUE (n = 67), CARP (n = 705), IVEE (n = 606), MOHK (n = 178), and NAPL (n = 112) in Santa Barbara County in 2017. Error bars indicate +/- 1 standard deviation. *Asterisk or letters indicate values that do/do not differ significantly* (by one-way ANOVA with Tukey's HSD; F(4,1663) = 3.42, $p$ = 0.0085) with $\alpha$ = 0.05 for all post-hoc pairwise comparison.
 
+
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
 ```{r}
 ### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
 # MPA = NAPL, IVEE; non-MPA = AQUE, CARP, MOHK
@@ -266,6 +298,8 @@ size_2017_graph
 
 ```
 
+
+### 4. Proportions of "legal" lobsters at 5 sites in 2017
 ```{r}
 ### 4. Proportions of "legal" lobsters at 5 sites in 2017
 # Legal minimum carapace size is 82.6 mm

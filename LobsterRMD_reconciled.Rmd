@@ -26,6 +26,9 @@ library(sjstats) # For chi-square
 library(ggsignif) # To add significance brackets
 library(xtable) # For ANOVA table
 library(RColorBrewer)
+library(ggpubr)
+library(car)
+library(onewaytests)
 ```
 
 ```{r, message=FALSE, include = FALSE}
@@ -234,6 +237,28 @@ summary_table
 
 ```
 
+```{r, include = FALSE}
+## DO LEVENE'S TEST HERE
+
+variances <- size_2017 %>% 
+  group_by(SITE) %>% 
+  summarize(
+    mean = mean(SIZE),
+    sd = sd(SIZE),
+    variance = var(SIZE)
+  )
+
+variances # Definitely are not close (also see that this lines up with Levene's test)
+
+size_2017_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
+
+size_2017_levene # Variances are significantly different
+
+
+```
+
+
+
 ```{r, echo = FALSE, include = FALSE}
 ### 2. Compare mean lobster size across five sites in 2017.
 
@@ -308,18 +333,29 @@ size_2017_graph <- ggplot(summary_stats_size_2017, aes(x = SITE, y = mean)) +
   scale_y_continuous(expand = c(0,0), limits = c(0,100)) + # Sets y-axis on x-axis line and adjusts scale.
   xlab("\nSite") +
   ylab("Mean Lobster Carapace Length (mm)\n") +
-  annotate("text", x = 5, y = 90, label = "*") # Annotates graph.
+  ggtitle("Lobster Carapace Length (mm) by Site") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  annotate("text", x = 5, y = 91, label = "a") + # Annotates graph.
+  annotate("text", x = 2:3, y = 89, label = "b")
+  
+
+# geom_signif(comparisons = list(c("NAPL", "IVEE")),
+#               map_signif_level = FALSE, textsize=2) +
+#  ylim(NA, 95) +
+#  geom_signif(comparisons = list(c("NAPL", "CARP")),
+#               map_signif_level = FALSE, textsize=2) +
+#  ylim(NA, 100)
+# Add pairwise comparisons p-value. None of it worked.
 
 size_2017_graph
 
 ```
 
-**Figure 3. Lobster carapace length for five sites in 2017.** Mean lobster carapace length (mm) for sites AQUE (n = 67), CARP (n = 705), IVEE (n = 606), MOHK (n = 178), and NAPL (n = 112) in Santa Barbara County in 2017. Error bars indicate +/- 1 standard deviation. *Asterisk or letters indicate values that do/do not differ significantly* (one-way ANOVA with Tukey's HSD; F(4,1663) = 3.42, $p$ = 0.0085) with $\alpha$ = 0.05 for all post-hoc pairwise comparison.
+**Figure 3. Lobster carapace length for five sites in 2017.** Mean lobster carapace length (mm) for sites AQUE (n = 67), CARP (n = 705), IVEE (n = 606), MOHK (n = 178), and NAPL (n = 112) in Santa Barbara County in 2017. Error bars indicate +/- 1 standard deviation. Letters indicate that NAPL (a) differed significantly from CARP (b) and IVEE (b) (one-way ANOVA with Tukey's HSD; F(4,1663) = 3.42, $p$ = 0.0085) with $\alpha$ = 0.05 for all post-hoc pairwise comparisons.
 
-Come up with a better way to show this. can display p-values directly on graph.
 
 ### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
-```{r}
+```{r, include=FALSE}
 ### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
 # MPA = NAPL, IVEE; non-MPA = AQUE, CARP, MOHK
 # Summary Statistics
@@ -327,15 +363,232 @@ Come up with a better way to show this. can display p-values directly on graph.
 # Hypothesis Test
 
 # Question 1: At MPA sites, how do lobster sizes in 2012 and 2017 compare?
-
-
-
 # Question 2: At non-MPA sites, how do lobster sizes in 2012 and 2017 compare?
+
+mpa_size <- size_tidier %>%
+  mutate(MPA = case_when(SITE == "NAPL" ~ "MPA", 
+                         SITE == "IVEE" ~ "MPA",
+                         SITE == "CARP" ~ "non-MPA",
+                         SITE == "MOHK" ~ "non-MPA",
+                         SITE == "AQUE" ~ "non-MPA")) %>%
+  filter(YEAR == "2012" | YEAR == "2017")
+
+mpa_size
+
 
 ```
 
-### 4. Proportions of "legal" lobsters at 5 sites in 2017
+```{r, include = FALSE}
+## DO LEVENE'S TEST HERE
+
+variances_mpa <- mpa_size %>% 
+  group_by(SITE) %>% 
+  summarize(
+    mean = mean(SIZE),
+    sd = sd(SIZE),
+    variance = var(SIZE)
+  )
+
+variances_mpa # Definitely are not close (also see that this lines up with Levene's test)
+
+mpa_levene <- leveneTest(SIZE ~ SITE, data = mpa_size)
+
+mpa_levene # Variances are significantly different
+
+# tests are identical to the one runs for size_2017. same data.
+
+```
+
+
+```{r, echo = FALSE}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+#### Summary Stats
+
+summary_stats_mpa <- mpa_size %>%
+  group_by(MPA, YEAR) %>%
+  summarize(median = round(median(SIZE),2), 
+            max = max(SIZE),
+            mean = round(mean(SIZE),1),
+            sd = round(sd(SIZE),1),
+            n = length(SIZE))
+summary_stats_mpa
+```
+
+```{r, include = FALSE}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# Graph
+
+mpa_graph <- ggplot(summary_stats_mpa, aes(x = YEAR, y = mean)) +
+  geom_col(position = position_dodge(), stat = "identity", aes(fill = MPA)) +
+  scale_fill_manual(
+values = c("grey60","grey20"),
+limits = c("MPA","non-MPA"), breaks =c("MPA","non-MPA"),
+name = "Year", labels = c("MPA","non-MPA")) +
+  theme_classic() +
+  ylab("Mean Lobster Carapace Length (mm)\n") +
+  xlab("\nYear") +
+  ggtitle("Lobster Size by Year at MPA and non-MPA sites") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_x_discrete(breaks = c(2012,2017)) +
+  scale_y_continuous(expand = c(0,0))
+
+mpa_graph
+
+# This does not appear useful. I will make a table instead.
+
+```
+
+**Table 2. Summarized lobster carapace length at MPA and non-MPA sites in 2012 and 2017.** Median, maximum, and mean lobster carapace length (mm) for Santa Barbara County MPA (IVEE and NAPL) and non-MPA sites (AQUE, CARP, and MOHK) in 2012 and 2017 (n = 1899). Data were collected every two to four weeks from October to March by the Santa Barbara Coastal Long Term Ecological Research Project (SBC LTER).
+
+```{r, echo = FALSE}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# Summary Statistics Table
+
+summary_table_mpa <- kable(summary_stats_mpa,
+                       col.names = c("MPA Status","Year","Median","Max","Mean","SD","n"), 
+                       align = "c") %>%
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE) %>%
+  add_header_above(c("","","Lobster Carapace Length (mm)" = 5))
+
+summary_table_mpa
+
+#  group_rows("MPA",1,2) %>%
+#  group_rows("Non-MPA",3,4)
+
+```
+Lobster carapace length and individual abundance increased at MPA sites from 2012 (67.4 +/- 12.2 mm (mean +/- sd), n = 32) to 2017 (72.2 +/- 14.0 mm (mean +/- sd), n = 718). At non-MPA sites, carapace size decreased and abundance increased from 2012 (74.9 +/- 12.4 mm (mean +/- sd), n = 199) to 2017 (72.3 +/- 12.5 mm (mean +/- sd, n = 32) (Table 2). The increase in lobster abundance from 2012 to 2017 represents at 2144% and 377% increase at MPA and non-MAP sites, respectively. 
+
+
+
+```{r, include = FALSE}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# Test for normality with histogram and QQ-plot with new dataframe filtered for 2012 and 2017.
+
+mpa_hist <- ggplot(mpa_size, aes(SIZE)) +
+  geom_histogram(bins = 23) # Bins = 2*n^(1/3) = 23 bins; n = ~1500
+mpa_hist
+
+mpa_qq <- ggplot(mpa_size, aes(sample = SIZE)) +
+  geom_qq()
+mpa_qq
+
+# yup, it's normally distributed.
+
+```
+
+```{r, include = FALSE}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# F test for equal variances
+
+mpa_ftest <- mpa_size %>%
+  var.test(YEAR ~ MPA, data = .)
+mpa_ftest
+
+# Variances are not equal.
+
+```
+
+
 ```{r}
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# Hypothesis test
+
+#H0: At MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+#H0: At non-MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At non-MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+
+mpa_ttest <- t.test(mpa_size$YEAR, mpa_size$SIZE, conf.level=0.95)
+mpa_ttest
+
+
+#  alternative = "greater"
+
+```
+A paired two-tailed, two-sample t-test shows that there is a significant difference in carapace size between MPA and non-MPA sites between 2012 and 2017 (t(1898) = -6387.9, p < 0.0001, $\alpha$ = 0.05).
+
+
+```{r}
+#H0: At MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+mpa_only <- mpa_size %>%
+  filter(MPA == "MPA")
+
+mpa_only_ttest <- t.test(mpa_only$YEAR, mpa_only$SIZE, conf.level=0.95)
+mpa_only_ttest
+
+
+```
+
+```{r}
+#H0: At non-MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At non-MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+non_mpa_only <- mpa_size %>%
+  filter(MPA == "non-MPA")
+
+non_mpa_only_ttest <- t.test(non_mpa_only$YEAR, non_mpa_only$SIZE, conf.level=0.95)
+non_mpa_only_ttest
+
+
+```
+
+#### Now let's try this with directionalisty
+
+```{r}
+### Directional ###
+
+### 3. Change in lobster size at MPA and non-MPA sites between 2012 and 2017
+# Hypothesis test
+
+#H0: At MPA sites, carapace size is NOT greater in 2017 than 2012.
+#HA: At MPA sites, carapace size is greater in 2017 than 2012.
+
+#H0: At non-MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At non-MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+
+mpa_ttest_greater <- t.test(mpa_size$YEAR, mpa_size$SIZE, conf.level=0.95, alternative = "greater")
+mpa_ttest_greater
+
+
+#  alternative = "greater"
+
+```
+
+
+```{r}
+### Directional ###
+
+#H0: At MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+mpa_only_ttest_greater <- t.test(mpa_only$YEAR, mpa_only$SIZE, conf.level=0.95, alternative = "greater")
+mpa_only_ttest_greater
+
+
+```
+
+```{r}
+### Directional ###
+
+#H0: At non-MPA sites, there is no difference in carapace size between 2012 and 2017.
+#HA: At non-MPA sites, there is a difference in carapace size between 2012 and 2017.
+
+non_mpa_only_ttest_greater <- t.test(non_mpa_only$YEAR, non_mpa_only$SIZE, conf.level=0.95)
+non_mpa_only_ttest_greater
+
+
+```
+
+
+
+### 4. Proportions of "legal" lobsters at 5 sites in 2017
+```{r, include = FALSE}
 ### 4. Proportions of "legal" lobsters at 5 sites in 2017
 # Legal minimum carapace size is 82.6 mm
 # Chi-square test
@@ -372,6 +625,33 @@ chisq.test(c(.2145, .3304, .2388, .2539, .1348))
 #Given that the p-value is high (0.99), there is no significant difference between the different sites in terms of proportions of lobsters observed above the legal size limit. 
 ```
 
+```{r, include = FALSE}
+# Chi Square Analysis
+
+# creat new data frame assigning legal and not legal sizes
+
+lobster_legal <- size_2017 %>%
+  mutate(size=ifelse(SIZE <= 82.6, "Not Legal", "Legal"))
+
+lobster_legal
+
+lobster_legal_table <- lobster_legal %>%
+  count(SITE, size) %>%
+  spread(size, n) %>%
+  select(-SITE)
+
+lobster_legal_table
+
+```
+```{r}
+# Chi Square test
+
+chi_test = chisq.test(lobster_legal_table, simulate.p.value = TRUE)
+chi_test
+
+
+```
+ There is an association between size and MPA site designation. x^2^(4) = 18.5, p = 0.0009995
 
 
 ### Discussion
@@ -379,5 +659,13 @@ chisq.test(c(.2145, .3304, .2388, .2539, .1348))
 There is a vast difference in sample sites between sites. AQUE n = 67 vs. CARP n = 705. Greater abundance at CARP and AQUE compared to other sites. 
 
 
+
+### Conclusions
+
+-What we will likely find is that MPA sites will have larger and more lonsters than non-MPA sites.
+-Lobster numbers increase after MPAs put in place
+-as trapping decrease, lobster numbers and sizes increase.
+-greater proportion of "legal size" lobsters at MPS site.
+-we'll need to be careful with these statements because we haven't done direction tests with some of them yet. We have just shown that there is a significant difference.
 
 
